@@ -1,0 +1,156 @@
+#include "CryptEngine.h"
+#include "CryptEngine.tab"
+
+#include "../Buffer.h"
+#include "../typedef.h"
+#include "../stdDefs.h"
+#include "SeedCipher.h"
+#include "../Crc32.h"
+#include "../utils.h"
+#include "../iSingleton.h"
+#include "../Logger.h"
+
+#include <ctime>
+
+namespace Common {
+namespace crypto {
+
+static uint32 s_ClientKeyId = 0x56;
+static uint32 s_ServerKeyId = 0x3D;
+
+CryptEngine::CryptEngine() {
+    m_GGKey = NULL;
+
+	srand((uint32)time(0));
+
+    for(int i = 0; i < 100; i++) {
+        m_codePages[i] = rand() % 10;
+        if(m_codePages[i] == m_codePages[i - 1]) {
+            i--;
+        }
+    }
+
+    m_codePageCount = 0;
+}
+
+void CryptEngine::SetGGCryptParams(byte* GGClientSeedKey, byte* GGServerSeedKey, byte* GGKey) {
+    memcpy(m_GGClientSeedKey, GGClientSeedKey, sizeof(m_GGClientSeedKey));
+    memcpy(m_GGServerSeedKey, GGServerSeedKey, sizeof(m_GGServerSeedKey));
+    if(m_GGKey != NULL) {
+		delete[] m_GGKey;
+	}
+	m_GGKey = new byte[strlen((char*)GGKey) + 1];
+    strcpy((char*)m_GGKey, (char*)GGKey);
+
+	for (int i = 0; m_GGKey[i]; i++) {
+        m_GGClientSeedKey[i % 16] ^= m_GGKey[i];
+        m_GGServerSeedKey[i % 16] ^= m_GGKey[i];
+    }
+
+    SeedCipher::EncRoundKey(m_GGClientSeedParam, m_GGClientSeedKey);
+    SeedCipher::EncRoundKey(m_GGServerSeedParam, m_GGServerSeedKey);
+}
+
+void CryptEngine::XorCrypt(Buffer_ptr buffer, Cryptkey& key) {
+    XorCryptPacketBody(buffer->Data(), buffer->Length(), key);
+    XorCryptPacketHeader(buffer->Data());
+}
+
+void CryptEngine::XorDecrypt(Buffer_ptr buffer) {
+    XorDecryptPacketHeader(buffer->Data());
+    Cryptkey key;
+    buffer->GetPack(key, 4);
+    XorDecryptPacketBody(buffer->Data(), buffer->Length(), key);
+}
+
+void CryptEngine::XorCryptPacketHeader(byte* bytes) {
+    for (int i = 1; i < PACKET_HEADER_SIZE; i++) {
+        bytes[i] = bytes[i] ^ BitFields[i - 1];
+        bytes[i] = (bytes[i] << 1) | (bytes[i] >> 7);
+    }
+}
+
+void CryptEngine::XorCryptPacketBody(byte* bytes, size_t size, Cryptkey& key) {
+    size_t pos1 = (key.CodePage * 10 + key.Key1) * 40;
+    size_t pos2 = (key.CodePage * 10 + key.Key2) * 40;
+	for (size_t i = PACKET_HEADER_SIZE, j = 0; i < size; i++, j++) {
+        bytes[i] = bytes[i] ^ BitFields[pos1 + j % 40] ^ BitFields[pos2 + j % 40];
+    }
+}
+
+void CryptEngine::XorDecryptPacketHeader(byte* bytes) {
+    for (int i = 1; i < PACKET_HEADER_SIZE; i++) {
+        bytes[i] = (char) (bytes[i] >> 1) | (char) (bytes[i] << 7);
+        bytes[i] = bytes[i] ^ BitFields[i - 1];
+    }
+}
+
+void CryptEngine::XorDecryptPacketBody(byte* bytes, size_t size, Cryptkey& key) {
+    size_t pos1 = (key.CodePage * 10 + key.Key1) * 40;
+    size_t pos2 = (key.CodePage * 10 + key.Key2) * 40;
+    for (size_t i = PACKET_HEADER_SIZE, j = 0; i < size; i++, j++) {
+        bytes[i] = bytes[i] ^ BitFields[pos1 + j % 40] ^ BitFields[pos2 + j % 40];
+    }
+}
+
+void CryptEngine::GGCrypt(Buffer_ptr buffer) {
+    //byte* data = buffer->Data();
+    //size_t dataLen = buffer->Length();
+    //uint32 buffDataLen = dataLen;
+    //if((dataLen % 16 + buffer->Length()) > buffer->MaxLength()) {
+    //    buffer->SetMaxLength(dataLen % 16 + buffer->MaxLength());
+    //} 
+    //while (dataLen % 16 != 0) {
+    //    buffer->Add((uint8)(rand() % 256), dataLen++);
+    //}
+    //if((buffer->Length() + 16) > buffer->MaxLength()) {
+    //    buffer->SetMaxLength(buffer->Length() + 16);
+    //}
+
+    //buffer->Add((uint32)0, dataLen); //m_dwServerSequenceNumber
+    //buffer->Add(Crc32::Calculate(data, buffer->Length()), dataLen + 4);
+    //buffer->Add(buffDataLen, dataLen + 8);
+    //buffer->Add(s_ServerKeyId, dataLen + 12);
+    //
+    //dataLen = buffer->Length();
+    //for (int i = 0; i < dataLen; i += 16) {
+    //    //SeedCipher::Encrypt(data + i, GGServerSeedParam);
+    //    SeedCipher::Encrypt(data + i, GGClientSeedParam);
+    //}
+}
+
+CryptEngine::GGError CryptEngine::GGDecrypt(Buffer_ptr buffer) {
+    byte* data = buffer->Data();
+    size_t dataLen = buffer->Length();
+    
+    for (size_t i = 0; i < dataLen; i += 16) {
+        SeedCipher::Decrypt(data + i, m_GGClientSeedParam);
+    }
+    
+    if(EndianChange(buffer->Get<uint32>((int)buffer->Length() - 4)) != s_ClientKeyId) {
+        return GGERRO_ClientKey;
+    }
+    
+    uint32 GGDataSize = EndianChange(buffer->Get<uint32>((int)buffer->Length() - 8));
+    uint32 GGDataCRC = EndianChange(buffer->Get<uint32>((int)buffer->Length() - 12));
+    if(Crc32::Calculate(data, dataLen - 12) != GGDataCRC) {
+        return GGERRO_Checksum;
+    }
+    
+    uint32 GGUseSeq = EndianChange(buffer->Get<uint32>((int)buffer->Length() - 16));
+    
+    buffer->SetLength(GGDataSize);
+    buffer->SetMaxLength(GGDataSize);
+    return GGERRO_Sucess;
+}
+
+void CryptEngine::InitKey(Cryptkey& k) {
+    m_codePageCount++;
+    m_codePageCount %= 50;
+    k.Key1 = m_codePages[m_codePageCount];
+    k.Key2 = m_codePages[m_codePageCount + 1];
+    k.CodePage = 1;
+}
+
+} //namespace crypt
+} //namespace common

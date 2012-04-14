@@ -1,0 +1,143 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="network">
+      <UniqueIdentifier>{fcea3716-0032-4403-a121-0faded8fb561}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="crypto">
+      <UniqueIdentifier>{2e2b0792-ec15-4613-870a-f5d7df83b5af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="math">
+      <UniqueIdentifier>{ba707179-c318-408f-a584-7eeaafd7cac5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="packet">
+      <UniqueIdentifier>{d3f49acb-c361-434d-80d7-20c3438e4fa6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Splash.h" />
+    <ClInclude Include="stdDefs.h" />
+    <ClInclude Include="typedef.h" />
+    <ClInclude Include="utils.h" />
+    <ClInclude Include="Buffer.h" />
+    <ClInclude Include="Crc32.h" />
+    <ClInclude Include="iPackable.h" />
+    <ClInclude Include="iSingleton.h" />
+    <ClInclude Include="iStartupClass.h" />
+    <ClInclude Include="Logger.h" />
+    <ClInclude Include="main.h" />
+    <ClInclude Include="crypto\CryptEngine.h">
+      <Filter>crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="crypto\SeedCipher.h">
+      <Filter>crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="math\Half.h">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="network\SocketClient.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="network\SocketServer.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="packet\pktAuthAccountAck.h">
+      <Filter>packet</Filter>
+    </ClInclude>
+    <ClInclude Include="packet\pktAuthServer.h">
+      <Filter>packet</Filter>
+    </ClInclude>
+    <ClInclude Include="packet\pktAuthServerAck.h">
+      <Filter>packet</Filter>
+    </ClInclude>
+    <ClInclude Include="packet\pktPing.h">
+      <Filter>packet</Filter>
+    </ClInclude>
+    <ClInclude Include="packet\pktServerDetail.h">
+      <Filter>packet</Filter>
+    </ClInclude>
+    <ClInclude Include="packet\pktServerDetailAsk.h">
+      <Filter>packet</Filter>
+    </ClInclude>
+    <ClInclude Include="packet\pktServerList.h">
+      <Filter>packet</Filter>
+    </ClInclude>
+    <ClInclude Include="packet\pktServerListAsk.h">
+      <Filter>packet</Filter>
+    </ClInclude>
+    <ClInclude Include="packet\pktUserLogin.h">
+      <Filter>packet</Filter>
+    </ClInclude>
+    <ClInclude Include="packet\pktUserLoginAck.h">
+      <Filter>packet</Filter>
+    </ClInclude>
+    <ClInclude Include="packet\PacketBase.h">
+      <Filter>packet</Filter>
+    </ClInclude>
+    <ClInclude Include="packet\pktAuthAccount.h">
+      <Filter>packet</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="utils.cpp" />
+    <ClCompile Include="Crc32.cpp" />
+    <ClCompile Include="Logger.cpp" />
+    <ClCompile Include="crypto\SeedCipher.cpp">
+      <Filter>crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="crypto\CryptEngine.cpp">
+      <Filter>crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="network\SocketClient.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
+    <ClCompile Include="packet\pktAuthServer.cpp">
+      <Filter>packet</Filter>
+    </ClCompile>
+    <ClCompile Include="packet\pktAuthServerAck.cpp">
+      <Filter>packet</Filter>
+    </ClCompile>
+    <ClCompile Include="packet\pktPing.cpp">
+      <Filter>packet</Filter>
+    </ClCompile>
+    <ClCompile Include="packet\pktServerDetail.cpp">
+      <Filter>packet</Filter>
+    </ClCompile>
+    <ClCompile Include="packet\pktServerDetailAsk.cpp">
+      <Filter>packet</Filter>
+    </ClCompile>
+    <ClCompile Include="packet\pktServerList.cpp">
+      <Filter>packet</Filter>
+    </ClCompile>
+    <ClCompile Include="packet\pktServerListAsk.cpp">
+      <Filter>packet</Filter>
+    </ClCompile>
+    <ClCompile Include="packet\pktUserLogin.cpp">
+      <Filter>packet</Filter>
+    </ClCompile>
+    <ClCompile Include="packet\pktUserLoginAck.cpp">
+      <Filter>packet</Filter>
+    </ClCompile>
+    <ClCompile Include="packet\PacketBase.cpp">
+      <Filter>packet</Filter>
+    </ClCompile>
+    <ClCompile Include="packet\pktAuthAccount.cpp">
+      <Filter>packet</Filter>
+    </ClCompile>
+    <ClCompile Include="packet\pktAuthAccountAck.cpp">
+      <Filter>packet</Filter>
+    </ClCompile>
+    <ClCompile Include="network\SocketServer.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Crc32.tab" />
+    <None Include="crypto\CryptEngine.tab">
+      <Filter>crypto</Filter>
+    </None>
+    <None Include="crypto\seed.tab">
+      <Filter>crypto</Filter>
+    </None>
+  </ItemGroup>
+</Project>
