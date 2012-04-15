@@ -1,15 +1,13 @@
-#include "../Common/iStartupClass.h"
-
-#include <winsock2.h>
-#include <windows.h>
+#ifndef _LOGINSERVER_H_
+#define _LOGINSERVER_H_
 
 #include <vector>
 #include <string>
 
 #include <Poco/Util/ServerApplication.h>
 
-class LoginServer: public  Poco::Util::ServerApplication{
-public:	
+class LoginServer: public  Poco::Util::ServerApplication {
+public:
 	LoginServer();
 	~LoginServer();
 private:
@@ -17,3 +15,5 @@ private:
 	void uninitialize();
 	int main(const std::vector<std::string>& args);
 };
+
+#endif
