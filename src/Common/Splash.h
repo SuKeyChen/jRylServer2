@@ -1,6 +1,6 @@
 char Splash[] =
 CL_YELLOW"          _____             "CL_LT_GREEN"/ \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\\n"
-CL_YELLOW"         ""/\\    \\           "CL_LT_GREEN"( R | y | l | S | e | r | v | e | r )\n"
+CL_YELLOW"         ""/\\    \\           "CL_LT_GREEN"| R | y | l | S | e | r | v | e | r |\n"
 CL_YELLOW"        /::\\    \\           "CL_LT_GREEN"\\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \\_/\n"
 CL_YELLOW"        \\:::\\    \\\n"
 CL_YELLOW"         \\:::\\    \\                      "CL_GRAY"%s\n"

@@ -15,38 +15,51 @@ namespace Common {
 namespace network {
 
 class SocketServer;
+class SocketClient;
 
-typedef boost::function<void (Buffer_ptr)> PacketCallback;
+typedef boost::function<void (SocketClient*, Buffer_ptr)> PacketCallback;
+typedef boost::function<void (SocketClient*)> ClientCallback;
 
 class SocketClient
 {
 public:
 	SocketClient();
-	SocketClient(SocketServer& socketServer);
+	SocketClient(boost::asio::ip::tcp::socket* socket, SocketServer& socketServer);
 
 	~SocketClient();
 
-	bool Connect(string& address, string& port);
+	bool Connect(string address, string port);
 	void SendPacket(packet::PacketBase& packet);
+	void Close();
 	
-	inline void ReceivePacketCallback(PacketCallback packetCallback);
+	inline void SetReceivePacketCallback(PacketCallback packetCallback);
+	inline void SetCloseCallback(ClientCallback closeCallback);
 private:
 	void Run();
 	void hWrite(Buffer_ptr buff, const boost::system::error_code& error);
 	void hRead(Buffer_ptr buff, const boost::system::error_code& error, size_t size);
 private:
+	bool m_isClosing;
 	boost::condition_variable m_condVarRun;
-	boost::asio::ip::tcp::socket m_socket;
+	boost::asio::ip::tcp::socket* m_socket;
 	PacketCallback m_receiveCallback;
+	ClientCallback m_closeCallback;
 	SocketServer* m_socketServer;
 	boost::thread m_thread;
+	boost::mutex m_closingMutex;
 	boost::mutex m_sendPacketMutex;
-	boost::circular_buffer<Buffer_ptr> m_ReadQueue;
+	boost::mutex m_readQueueMutex;
+	boost::circular_buffer<Buffer_ptr> m_readQueue;
 };
 
-void SocketClient::ReceivePacketCallback(PacketCallback receiveCallback)
+void SocketClient::SetReceivePacketCallback(PacketCallback receiveCallback)
 {
 	m_receiveCallback = receiveCallback;
+}
+
+void SocketClient::SetCloseCallback(ClientCallback closeCallback)
+{
+	m_closeCallback = closeCallback;
 }
 
 }

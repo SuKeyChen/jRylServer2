@@ -13,8 +13,8 @@
 //General defs
 #define CHAR_SLOT_LENGTH 5
 #define FILE_CONF_GLOBAL_INI "config/global.ini"
-#define FILE_CONF_LOGINSERVER_INI "config/jLoginServer.ini"
-#define FILE_CONF_AUTHSERVER_INI "config/servers/{0}/jAuthServer.ini"
+#define FILE_CONF_LOGINSERVER_INI "config/LoginServer.ini"
+#define FILE_CONF_AUTHSERVER_INI "config/servers/{0}/AuthServer.ini"
 
 //AuthServer defs
 #define AUTHSERVER_SLOT_LENGTH 10

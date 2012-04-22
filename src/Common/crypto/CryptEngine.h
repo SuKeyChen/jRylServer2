@@ -59,6 +59,7 @@ public:
     void XorDecryptPacketBody(byte* bytes, size_t size, Cryptkey& key);
 private:
     CryptEngine();
+	~CryptEngine();
 
     byte m_GGClientSeedKey[16];
     byte m_GGServerSeedKey[16];

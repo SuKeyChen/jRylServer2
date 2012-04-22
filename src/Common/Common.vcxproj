@@ -53,7 +53,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE;_WIN32_WINNT =0x500;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE;_WIN32_WINNT=0x501;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(LZO_ROOT)/include/lzo;$(LZO_ROOT);$(BOOST_ROOT);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -75,7 +75,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE;_WIN32_WINNT =0x500;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_DEPRECATE;_WIN32_WINNT=0x501;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(LZO_ROOT)/include/lzo;$(LZO_ROOT);$(BOOST_ROOT);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -93,6 +93,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Buffer.h" />
+    <ClInclude Include="configuration\ConfLoad.h" />
+    <ClInclude Include="configuration\dictionary.h" />
+    <ClInclude Include="configuration\iniparser.h" />
     <ClInclude Include="Crc32.h" />
     <ClInclude Include="crypto\CryptEngine.h" />
     <ClInclude Include="crypto\SeedCipher.h" />
@@ -122,6 +125,9 @@
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="configuration\ConfLoad.cpp" />
+    <ClCompile Include="configuration\dictionary.cpp" />
+    <ClCompile Include="configuration\iniparser.cpp" />
     <ClCompile Include="Crc32.cpp" />
     <ClCompile Include="crypto\CryptEngine.cpp" />
     <ClCompile Include="crypto\SeedCipher.cpp" />

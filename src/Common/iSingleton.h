@@ -9,9 +9,9 @@ namespace Common {
 
 template<class T> class Singleton {
 public: 
-    static T& GetInstance();
-    static T* GetInstance_ptr();
-    static void DestroyInstance();
+    inline static T& GetInstance();
+    inline static T* GetInstance_ptr();
+    inline static void DestroyInstance();
 protected:
     inline Singleton() {
         Singleton::ms_Instance = static_cast<T*>(this); 

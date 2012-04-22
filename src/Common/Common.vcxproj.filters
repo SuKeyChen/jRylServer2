@@ -13,6 +13,9 @@
     <Filter Include="packet">
       <UniqueIdentifier>{d3f49acb-c361-434d-80d7-20c3438e4fa6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="configuration">
+      <UniqueIdentifier>{4adc200d-18af-418e-a4aa-e929ba6dfc26}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Splash.h" />
@@ -77,6 +80,15 @@
     <ClInclude Include="packet\pktAuthAccount.h">
       <Filter>packet</Filter>
     </ClInclude>
+    <ClInclude Include="configuration\ConfLoad.h">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="configuration\dictionary.h">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="configuration\iniparser.h">
+      <Filter>configuration</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="utils.cpp" />
@@ -129,6 +141,15 @@
     </ClCompile>
     <ClCompile Include="network\SocketServer.cpp">
       <Filter>network</Filter>
+    </ClCompile>
+    <ClCompile Include="configuration\ConfLoad.cpp">
+      <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="configuration\dictionary.cpp">
+      <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="configuration\iniparser.cpp">
+      <Filter>configuration</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

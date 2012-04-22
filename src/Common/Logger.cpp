@@ -8,7 +8,8 @@
 #include <ctime>
 
 #if defined(_WIN32) || defined(_WIN64)
-#include <Windows.h>
+#include <winsock2.h>
+#include <windows.h>
 #endif
 
 namespace Common {
@@ -39,7 +40,28 @@ Logger::LogFile_ptr Logger::CreateLogFile(const char* path, bool truncateExistin
     LogFile_ptr file(new LogFile);
 
 #if defined(_WIN32) || defined(_WIN64)
-    LOGFILEDESCRIPTOR hfile = CreateFileA(path,
+	char dir[1024];
+	const char* pos;
+	int offset = 0;
+	while((pos = strchr(path + offset, '/')) != NULL 
+		|| (pos = strchr(path  + offset, '\\')) != NULL) 
+	{
+		offset = pos - path + 1;
+		memcpy(dir, path, sizeof(char) * offset);
+		dir[offset] = '\0';
+
+		if (!CreateDirectory(dir,NULL))
+		{
+			uint32 erro = GetLastError();
+			if (erro != ERROR_ALREADY_EXISTS)
+			{
+				ShowError("Could not create directory %s error code: %d.\n", dir, erro);
+				break;
+			}
+		}		
+	}
+
+	LOGFILEDESCRIPTOR hfile = CreateFileA(path,
       FILE_APPEND_DATA,
       FILE_SHARE_READ,
       NULL,
