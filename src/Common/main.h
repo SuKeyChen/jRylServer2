@@ -9,7 +9,7 @@
 # endif
 #else
 # include <signal.h>
-#endif
+#endif 
 
 #include "Logger.h"
 #include "crypto/CryptEngine.h"

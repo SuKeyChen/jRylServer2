@@ -1,5 +1,5 @@
-#ifndef _AUTHSERVER_H_
-#define	_AUTHSERVER_H_
+#ifndef _PKT_AUTHSERVER_H_
+#define	_PKT_AUTHSERVER_H_
 
 #include "../Buffer.h"
 #include "PacketBase.h"

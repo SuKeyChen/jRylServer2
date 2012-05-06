@@ -61,7 +61,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>lzo2.lib</AdditionalDependencies>
+      <AdditionalDependencies>lzo2.lib;Ws2_32.lib</AdditionalDependencies>
     </Lib>
     <Lib>
       <AdditionalLibraryDirectories>$(LZO_ROOT)</AdditionalLibraryDirectories>
@@ -85,7 +85,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>lzo2.lib</AdditionalDependencies>
+      <AdditionalDependencies>lzo2.lib;Ws2_32.lib</AdditionalDependencies>
     </Lib>
     <Lib>
       <AdditionalLibraryDirectories>$(LZO_ROOT)</AdditionalLibraryDirectories>
@@ -107,6 +107,9 @@
     <ClInclude Include="math\Half.h" />
     <ClInclude Include="network\SocketClient.h" />
     <ClInclude Include="network\SocketServer.h" />
+    <ClInclude Include="network\windows\WindowsSocketClient.h" />
+    <ClInclude Include="network\windows\WindowsSocketServer.h" />
+    <ClInclude Include="network\windows\WindowsStartup.h" />
     <ClInclude Include="packet\PacketBase.h" />
     <ClInclude Include="packet\pktAuthAccount.h" />
     <ClInclude Include="packet\pktAuthAccountAck.h" />
@@ -134,6 +137,9 @@
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="network\SocketClient.cpp" />
     <ClCompile Include="network\SocketServer.cpp" />
+    <ClCompile Include="network\windows\WindowsSocketClient.cpp" />
+    <ClCompile Include="network\windows\WindowsSocketServer.cpp" />
+    <ClCompile Include="network\windows\WindowsStartup.cpp" />
     <ClCompile Include="packet\PacketBase.cpp" />
     <ClCompile Include="packet\pktAuthAccount.cpp" />
     <ClCompile Include="packet\pktAuthAccountAck.cpp" />

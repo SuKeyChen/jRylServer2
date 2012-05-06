@@ -9,6 +9,8 @@
 #include <vector>
 #include <string>
 
+class AuthServerMgr;
+
 class LoginServer: public  Common::StartupClass {
 public:
 	LoginServer(std::vector<std::string>& args);
@@ -17,7 +19,7 @@ public:
     virtual int Start();
     virtual void Stop();
 private:
-	
+	AuthServerMgr* m_authServer;
 };
 
 #define STARTUP_CLASS LoginServer

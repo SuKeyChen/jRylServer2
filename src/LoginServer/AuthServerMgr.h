@@ -23,7 +23,9 @@ class AuthServerMgr
 public:
 	AuthServerMgr();
 	~AuthServerMgr();
+	
 	bool Start();
+	void RemoveAuthServer(AuthServer* authServer);
 
 	inline AuthServer** GetAuthServers();
 private:

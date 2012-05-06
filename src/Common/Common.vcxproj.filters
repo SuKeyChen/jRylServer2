@@ -16,6 +16,9 @@
     <Filter Include="configuration">
       <UniqueIdentifier>{4adc200d-18af-418e-a4aa-e929ba6dfc26}</UniqueIdentifier>
     </Filter>
+    <Filter Include="network\windows">
+      <UniqueIdentifier>{6428d423-dbbb-433d-9ef6-12b679692882}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Splash.h" />
@@ -89,6 +92,15 @@
     <ClInclude Include="configuration\iniparser.h">
       <Filter>configuration</Filter>
     </ClInclude>
+    <ClInclude Include="network\windows\WindowsStartup.h">
+      <Filter>network\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="network\windows\WindowsSocketServer.h">
+      <Filter>network\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="network\windows\WindowsSocketClient.h">
+      <Filter>network\windows</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="utils.cpp" />
@@ -150,6 +162,15 @@
     </ClCompile>
     <ClCompile Include="configuration\iniparser.cpp">
       <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="network\windows\WindowsStartup.cpp">
+      <Filter>network\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="network\windows\WindowsSocketServer.cpp">
+      <Filter>network\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="network\windows\WindowsSocketClient.cpp">
+      <Filter>network\windows</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1,5 +1,5 @@
-#ifndef BUFFER_H
-#define BUFFER_H
+#ifndef _BUFFER_H_
+#define _BUFFER_H_
 
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_arithmetic.hpp>
@@ -239,6 +239,11 @@ public:
     inline size_t MaxLength() {
         return m_maxLength;
     }
+
+	inline void Clear()
+	{
+		memset(Data(), 0, MaxLength()); 
+	}
 
     inline void SetLength(size_t length) {
         m_length = length < m_maxLength ? length : m_maxLength;
