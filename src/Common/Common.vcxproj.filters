@@ -101,6 +101,15 @@
     <ClInclude Include="network\windows\WindowsSocketClient.h">
       <Filter>network\windows</Filter>
     </ClInclude>
+    <ClInclude Include="network\SocketServerBase.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="network\SocketClientBase.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="network\windows\WindowsCommonDefs.h">
+      <Filter>network\windows</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="utils.cpp" />
@@ -111,9 +120,6 @@
     </ClCompile>
     <ClCompile Include="crypto\CryptEngine.cpp">
       <Filter>crypto</Filter>
-    </ClCompile>
-    <ClCompile Include="network\SocketClient.cpp">
-      <Filter>network</Filter>
     </ClCompile>
     <ClCompile Include="packet\pktAuthServer.cpp">
       <Filter>packet</Filter>
@@ -151,9 +157,6 @@
     <ClCompile Include="packet\pktAuthAccountAck.cpp">
       <Filter>packet</Filter>
     </ClCompile>
-    <ClCompile Include="network\SocketServer.cpp">
-      <Filter>network</Filter>
-    </ClCompile>
     <ClCompile Include="configuration\ConfLoad.cpp">
       <Filter>configuration</Filter>
     </ClCompile>
@@ -171,6 +174,9 @@
     </ClCompile>
     <ClCompile Include="network\windows\WindowsSocketClient.cpp">
       <Filter>network\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="network\SocketClientBase.cpp">
+      <Filter>network</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

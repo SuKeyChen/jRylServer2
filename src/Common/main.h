@@ -25,7 +25,8 @@ bool StartSignalCtrl();
 #ifdef STARTUP_CLASS
 
 int main(int argc, char *argv[]) {
-    Logger::GetInstance().ClearDefaultLogFile();
+
+	Logger::GetInstance().ClearDefaultLogFile();
     Logger::GetInstance().ShowMessage(Splash, MODULE_NAME, 0);
 
 	Logger::GetInstance().ShowInfo("[main] Creating module\n");

@@ -106,7 +106,10 @@
     <ClInclude Include="main.h" />
     <ClInclude Include="math\Half.h" />
     <ClInclude Include="network\SocketClient.h" />
+    <ClInclude Include="network\SocketClientBase.h" />
     <ClInclude Include="network\SocketServer.h" />
+    <ClInclude Include="network\SocketServerBase.h" />
+    <ClInclude Include="network\windows\WindowsCommonDefs.h" />
     <ClInclude Include="network\windows\WindowsSocketClient.h" />
     <ClInclude Include="network\windows\WindowsSocketServer.h" />
     <ClInclude Include="network\windows\WindowsStartup.h" />
@@ -135,8 +138,7 @@
     <ClCompile Include="crypto\CryptEngine.cpp" />
     <ClCompile Include="crypto\SeedCipher.cpp" />
     <ClCompile Include="Logger.cpp" />
-    <ClCompile Include="network\SocketClient.cpp" />
-    <ClCompile Include="network\SocketServer.cpp" />
+    <ClCompile Include="network\SocketClientBase.cpp" />
     <ClCompile Include="network\windows\WindowsSocketClient.cpp" />
     <ClCompile Include="network\windows\WindowsSocketServer.cpp" />
     <ClCompile Include="network\windows\WindowsStartup.cpp" />

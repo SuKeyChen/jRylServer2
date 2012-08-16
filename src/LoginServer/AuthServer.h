@@ -14,7 +14,7 @@ public:
 		ASS_WAIT_DETAILS
 	};
 public:
-	AuthServer(Common::network::SocketClient* client, AuthServerMgr* authServerMgr);
+	AuthServer(Common::network::SocketClientBase* client, AuthServerMgr* authServerMgr);
 	~AuthServer();
 
 	inline uint8 GetGroup();
@@ -23,14 +23,15 @@ public:
     inline uint32 GetLastPing();
 	inline AuthServerStatus GetStatus();
 private:
-	void PacketParser(Common::network::SocketClient* client, Common::Buffer_ptr buff);
-	void ClientDesconnect(Common::network::SocketClient* client);
+	void PacketParser(Common::Buffer_ptr buff);
+	void ClientDesconnect();
+	void EventCallback(Common::network::SocketClientBase* client, Common::network::ClientEventType type, void* arg); 
 private:
 	uint8 m_group;
     string m_name;
     uint32 m_address;
     uint32 m_lastPing;
-    Common::network::SocketClient* m_socketClient;
+	Common::network::SocketClientBase* m_socketClient;
 	AuthServerStatus m_status;
 	AuthServerMgr* m_authServerMgr;
 };

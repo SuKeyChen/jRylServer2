@@ -10,6 +10,7 @@
 #include <string>
 
 class AuthServerMgr;
+class LauncherServer;
 
 class LoginServer: public  Common::StartupClass {
 public:
@@ -20,6 +21,7 @@ public:
     virtual void Stop();
 private:
 	AuthServerMgr* m_authServer;
+	LauncherServer* m_launcherServer;
 };
 
 #define STARTUP_CLASS LoginServer

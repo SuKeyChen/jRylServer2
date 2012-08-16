@@ -14,13 +14,15 @@ class LauncherServer
 public:
 	LauncherServer(AuthServerMgr* authServerMgr);
 private:
-	void AcceptCallback(Common::network::SocketClient* client);
-	void CloseCallback(Common::network::SocketClient* client);
-	void PacketCallback(Common::network::SocketClient* client, Common::Buffer_ptr buff);
+	void ServerEventCallback(Common::network::SocketServerBase* server, Common::network::ServerEventType type, void* arg);
+	void ClientEventCallback(Common::network::SocketClientBase* client, Common::network::ClientEventType type, void* arg);
+	void AcceptCallback(Common::network::SocketClientBase* client);
+	void CloseCallback(Common::network::SocketClientBase* client);
+	void PacketCallback(Common::network::SocketClientBase* client, Common::Buffer_ptr buff);
 private:
-	AuthServerMgr* m_AuthServerMgr;
-	Common::network::SocketServer m_socketServer;
-	std::set<Common::network::SocketClient*> m_socketClients;
+	AuthServerMgr* m_authServerMgr;
+	Common::network::SocketServerBase* m_socketServer;
+	std::set<Common::network::SocketClientBase*> m_socketClients;
 };
 
 #endif //_LAUNCHER_SERVER_H_

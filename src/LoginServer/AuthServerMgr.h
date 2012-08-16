@@ -29,13 +29,16 @@ public:
 
 	inline AuthServer** GetAuthServers();
 private:
-	void ClientConnect(Common::network::SocketClient* client);
-	void PacketParserUnauthorized(Common::network::SocketClient* client, Common::Buffer_ptr buff);
-	void ClientDesconnect(Common::network::SocketClient* client);
+	void EventCallbakc(Common::network::SocketServerBase* server, Common::network::ServerEventType type, void* arg);
+	void ClientConnect(Common::network::SocketClientBase* client);
+	void ClientDesconnect(Common::network::SocketClientBase* client);	
+	
+	void EventCallbakcUnauthorized(Common::network::SocketClientBase* client, Common::network::ClientEventType type, void* arg);
+	void PacketParserUnauthorized(Common::network::SocketClientBase* client, Common::Buffer_ptr buff);
 private:
 	AuthServer* m_authServers[AUTHSERVER_SLOT_LENGTH];
-	std::map<Common::network::SocketClient*, UnauthorizedAuthServer> m_unauthorizedAuthServers;
-	Common::network::SocketServer m_socketListen;	
+	std::map<Common::network::SocketClientBase*, UnauthorizedAuthServer> m_unauthorizedAuthServers;
+	Common::network::SocketServerBase* m_socketListen;
 };
 
 AuthServer** AuthServerMgr::GetAuthServers()

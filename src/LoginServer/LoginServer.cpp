@@ -2,6 +2,7 @@
 
 #include "GlobalConfTable.h"
 #include "AuthServerMgr.h"
+#include "LauncherServer.h"
 
 #include "../Common/stdDefs.h"
 #include "../Common/typedef.h"
@@ -10,15 +11,11 @@
 #include "../Common/network/SocketServer.h"
 #include "../Common/Logger.h"
 
-#include "../Common/network/windows/WindowsSocketServer.h"
-
 #define __LOG Common::Logger::GetInstance_ptr()
 
 LoginServer::LoginServer(std::vector<std::string>& args)
 {
 	
-	Common::network::windows::WindowsSocketServer* a = new Common::network::windows::WindowsSocketServer();
-	a->BindAndListen("localhost", 1808);
 }
 
 bool LoginServer::LoadConfig()
@@ -133,6 +130,11 @@ int LoginServer::Start()
 {	
 	m_authServer = new AuthServerMgr();
 	m_authServer->Start();
+
+	network::SocketClient client;
+
+	m_launcherServer = new LauncherServer(m_authServer);
+
 	getchar();
 	return 0;
 }

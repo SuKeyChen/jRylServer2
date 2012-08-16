@@ -10,17 +10,34 @@
 
 #include <boost/bind.hpp>
 
+using namespace Common;
+
 #define __LOG Common::Logger::GetInstance_ptr()
 
-AuthServer::AuthServer(Common::network::SocketClient* client, AuthServerMgr* authServerMgr):
+AuthServer::AuthServer(Common::network::SocketClientBase* client, AuthServerMgr* authServerMgr):
 	m_socketClient(client),	m_authServerMgr(authServerMgr), m_status(ASS_WAIT_DETAILS)
 {
-	m_socketClient->SetCloseCallback(boost::bind(&AuthServer::ClientDesconnect, this, _1));
-	m_socketClient->SetReceivePacketCallback(boost::bind(&AuthServer::PacketParser, this, _1, _2));
-	m_socketClient->SendPacket(Common::packet::ServerDetailAsk());
+	m_socketClient->SetEventCallback(boost::bind(&AuthServer::EventCallback, this, _1, _2, _3));
+
+	m_socketClient->SendPacket(packet::ServerDetailAsk());
 }
 
-void AuthServer::PacketParser(Common::network::SocketClient* client, Common::Buffer_ptr buff)
+void AuthServer::EventCallback(Common::network::SocketClientBase* client, Common::network::ClientEventType type, void* arg)
+{
+	switch (type)
+	{
+	case Common::network::CEV_PACKET_RECEIVED:
+		PacketParser(*(Common::Buffer_ptr*)arg);
+		break;
+	case Common::network::CEV_CLIENT_DESCONNECTED:
+		ClientDesconnect();
+		break;
+	default:
+		break;
+	}
+}
+
+void AuthServer::PacketParser(Common::Buffer_ptr buff)
 {
 	buff->SetReaderOffset(0);
 	switch(buff->Get<uint8>(1)) {
@@ -39,11 +56,10 @@ void AuthServer::PacketParser(Common::network::SocketClient* client, Common::Buf
 		break;
     }
 }
-void AuthServer::ClientDesconnect(Common::network::SocketClient* client)
+void AuthServer::ClientDesconnect()
 {
 	m_authServerMgr->RemoveAuthServer(this);
 }
 AuthServer::~AuthServer()
 {
-	delete m_socketClient;
 }

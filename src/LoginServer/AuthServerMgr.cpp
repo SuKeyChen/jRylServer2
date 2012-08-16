@@ -3,6 +3,7 @@
 #include "../Common/typedef.h"
 #include "../Common/stdDefs.h"
 #include "../Common/Logger.h"
+#include "../Common/utils.h"
 
 #include "../Common/packet/pktPing.h"
 #include "../Common/packet/pktAuthServer.h"
@@ -17,7 +18,8 @@
 
 #define __LOG Common::Logger::GetInstance_ptr()
 
-AuthServerMgr::AuthServerMgr()
+AuthServerMgr::AuthServerMgr():
+	m_socketListen(new Common::network::SocketServer())
 {	
 	for(int i = 0;i < AUTHSERVER_SLOT_LENGTH; i++)
 	{
@@ -29,8 +31,8 @@ bool AuthServerMgr::Start()
 {
 	GlobalConfTable* gconf = GlobalConfTable::GetInstance_ptr();
 
-	m_socketListen.SetAcceptCallback(boost::bind(&AuthServerMgr::ClientConnect, this, _1));
-	if(!m_socketListen.BindAndListen(gconf->AuthServerListenAddress, gconf->AuthServerListenPort))
+	m_socketListen->SetServerCallback(boost::bind(&AuthServerMgr::EventCallbakc, this, _1, _2, _3));
+	if(!m_socketListen->BindAndListen(gconf->AuthServerListenAddress, Common::j_atoi<uint16>(gconf->AuthServerListenPort.c_str())))
 	{
 		__LOG->ShowError("Error start bind and listen address for AuthServers\n");
 		return false;
@@ -38,16 +40,45 @@ bool AuthServerMgr::Start()
 	return true;
 }
 
-void AuthServerMgr::ClientConnect(Common::network::SocketClient* client)
+void AuthServerMgr::EventCallbakc(Common::network::SocketServerBase* server, Common::network::ServerEventType type, void* arg)
+{
+	switch (type)
+	{
+	case Common::network::SEVT_CLIENT_CONNECTED:
+		ClientConnect((Common::network::SocketClientBase*)arg);
+		break;
+	case Common::network::SEVT_CLIENT_DESCONNECTED:
+		ClientDesconnect((Common::network::SocketClientBase*)arg);
+		break;
+	default:
+		break;
+	}
+}
+
+void AuthServerMgr::ClientConnect(Common::network::SocketClientBase* client)
 {
 	m_unauthorizedAuthServers[client].AttemptLogin = 0;
 	m_unauthorizedAuthServers[client].State = UnauthorizedAuthServer::US_WAIT_PING;
 	m_unauthorizedAuthServers[client].Time = ::time(NULL);
-	client->SetCloseCallback(boost::bind(&AuthServerMgr::ClientDesconnect, this, _1));
-	client->SetReceivePacketCallback(boost::bind(&AuthServerMgr::PacketParserUnauthorized, this, _1, _2));
+	client->SetEventCallback(boost::bind(&AuthServerMgr::EventCallbakcUnauthorized, this, _1, _2, _3));
 }
 
-void AuthServerMgr::PacketParserUnauthorized(Common::network::SocketClient* client, Common::Buffer_ptr buff)
+void AuthServerMgr::EventCallbakcUnauthorized(Common::network::SocketClientBase* client, Common::network::ClientEventType type, void* arg)
+{
+	switch (type)
+	{
+	case Common::network::CEV_PACKET_RECEIVED:
+		PacketParserUnauthorized(client, *(Common::Buffer_ptr*)arg);
+		break;
+	case Common::network::CEV_CLIENT_DESCONNECTED:
+		ClientDesconnect(client);
+		break;
+	default:
+		break;
+	}
+}
+
+void AuthServerMgr::PacketParserUnauthorized(Common::network::SocketClientBase* client, Common::Buffer_ptr buff)
 {
 	GlobalConfTable* gconf = GlobalConfTable::GetInstance_ptr();
 	buff->SetReaderOffset(0);
@@ -56,7 +87,6 @@ void AuthServerMgr::PacketParserUnauthorized(Common::network::SocketClient* clie
 	case UnauthorizedAuthServer::US_WAIT_PING: {
 		if(buff->Get<uint8>(1) != Common::packet::Ping::PacketID) {
 			m_unauthorizedAuthServers.erase(client);
-		    delete client;
 		    return;
 		}
 		m_unauthorizedAuthServers[client].State =  UnauthorizedAuthServer::US_WAIT_USERPASS;
@@ -66,7 +96,6 @@ void AuthServerMgr::PacketParserUnauthorized(Common::network::SocketClient* clie
 	case UnauthorizedAuthServer::US_WAIT_USERPASS: {
 		if(buff->Get<uint8>(1) != Common::packet::AuthServer::PacketID) {
 			m_unauthorizedAuthServers.erase(client);
-		    delete client;
 		    return;
 		}
 		Common::packet::AuthServer authServer(buff);
@@ -94,10 +123,8 @@ void AuthServerMgr::PacketParserUnauthorized(Common::network::SocketClient* clie
 					m_unauthorizedAuthServers.erase(client);
 					authServerAck.SetErro(Common::packet::AuthServerAck::EA_SERVER_FULL);
 		            client->SendPacket(authServerAck);
-		            delete client;
 		            return;
 		        }
-		        
 		    }
 
 			m_unauthorizedAuthServers.erase(client);
@@ -111,7 +138,6 @@ void AuthServerMgr::PacketParserUnauthorized(Common::network::SocketClient* clie
 			if(m_unauthorizedAuthServers[client].AttemptLogin == MAX_AUTHSERVER_LOGIN_ATTEMPTS) {                    
 				authServerAck.SetErro(Common::packet::AuthServerAck::EA_MAX_LOGIN_ATTEMPTS);					
 		        client->SendPacket(authServerAck);
-		        delete client;
 		    } else {
 				authServerAck.SetErro(Common::packet::AuthServerAck::EA_USER_PASS_INCORRECT);
 		        client->SendPacket(authServerAck);
@@ -122,15 +148,13 @@ void AuthServerMgr::PacketParserUnauthorized(Common::network::SocketClient* clie
     }
     default:
 		m_unauthorizedAuthServers.erase(client);
-        delete client;
         break;
     }
 }
 
-void AuthServerMgr::ClientDesconnect(Common::network::SocketClient* client)
+void AuthServerMgr::ClientDesconnect(Common::network::SocketClientBase* client)
 {
 	m_unauthorizedAuthServers.erase(client);
-	delete client;
 }
 
 void AuthServerMgr::RemoveAuthServer(AuthServer* authServer)
@@ -140,6 +164,7 @@ void AuthServerMgr::RemoveAuthServer(AuthServer* authServer)
 		if(m_authServers[i] == authServer)
 		{
 			delete m_authServers[i];
+			m_authServers[i] = NULL;
 			return;
 		}
 	}
@@ -147,7 +172,7 @@ void AuthServerMgr::RemoveAuthServer(AuthServer* authServer)
 
 AuthServerMgr::~AuthServerMgr()
 {
-	std::map<Common::network::SocketClient*, UnauthorizedAuthServer>::iterator it = m_unauthorizedAuthServers.begin();
+	std::map<Common::network::SocketClientBase*, UnauthorizedAuthServer>::iterator it = m_unauthorizedAuthServers.begin();
 	while(it != m_unauthorizedAuthServers.end())
 	{
 		delete it->first;
@@ -160,4 +185,6 @@ AuthServerMgr::~AuthServerMgr()
 			delete m_authServers[i];
 		}
 	}
+
+	delete m_socketListen;
 }

@@ -12,7 +12,7 @@
 namespace Common {
 namespace crypto {
 
-class CryptEngine: public  Singleton<CryptEngine>
+class CryptEngine: public Singleton<CryptEngine>
 {
 MAKE_SINGLETON(CryptEngine);
 public:

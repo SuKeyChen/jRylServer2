@@ -5,6 +5,7 @@
 
 #include "WindowsStartup.h"
 #include "WindowsSocketClient.h"
+#include "WindowsCommonDefs.h"
 
 #include <WinSock2.h>
 #include <Ws2tcpip.h>
@@ -15,13 +16,16 @@ namespace Common {
 namespace network {
 namespace windows {
 
-WindowsSocketServer::WindowsSocketServer(): m_workThreadHandles(new HANDLE[MAX_WORKER_THREAD]), m_lastError(ERR_OK)
+WindowsSocketServer::WindowsSocketServer():
+	m_workThreadHandles(new HANDLE[MAX_WORKER_THREAD])
 {
+	m_lastError = ERR_OK;
 	if(!WindowsStartup::GetInstance().IsInitialized())
 	{
-		if(WindowsStartup::GetInstance().HasError() || !WindowsStartup::GetInstance().Initialize())
+		if(!WindowsStartup::GetInstance().Initialize())
 		{
 			m_lastError = ERR_INIT_WINDOWS_SOCKET;
+			return;
 		}
 	}
 
@@ -32,7 +36,8 @@ WindowsSocketServer::WindowsSocketServer(): m_workThreadHandles(new HANDLE[MAX_W
 		return;
 	}
 
-	m_acceptThreadHandle = CreateThread(NULL, 0,  (LPTHREAD_START_ROUTINE)AcceptThreadProc, this, 0, NULL);
+	m_acceptThreadHandle = CreateThread(NULL, 0, 
+		(LPTHREAD_START_ROUTINE)AcceptThreadProc, this, CREATE_SUSPENDED, NULL);
 	if(m_acceptThreadHandle == NULL)
 	{
 		m_lastError = ERR_INIT_SOCKETSERVER;
@@ -43,7 +48,8 @@ WindowsSocketServer::WindowsSocketServer(): m_workThreadHandles(new HANDLE[MAX_W
 	{
 		HANDLE hThread;
 		
-		hThread = CreateThread(NULL, 0,  (LPTHREAD_START_ROUTINE)WorkerThreadProc, this, 0, NULL);
+		hThread = CreateThread(NULL, 0,  (LPTHREAD_START_ROUTINE)WorkerThreadProc,
+			this, 0, NULL);
 		if(hThread == NULL)
 		{
 			m_lastError = ERR_INIT_SOCKETSERVER;
@@ -52,7 +58,8 @@ WindowsSocketServer::WindowsSocketServer(): m_workThreadHandles(new HANDLE[MAX_W
 		m_workThreadHandles[i] = hThread;
 	}
 
-	m_socketListen = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_IP, NULL, 0, WSA_FLAG_OVERLAPPED); 
+	m_socketListen = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_IP, NULL, 0,
+		WSA_FLAG_OVERLAPPED); 
 	if( m_socketListen == INVALID_SOCKET )
 	{
 		m_lastError = ERR_INIT_SOCKETSERVER;
@@ -64,7 +71,6 @@ bool WindowsSocketServer::BindAndListen(std::string address, uint16 port)
 {
 	struct addrinfo hints = {0};
 	struct addrinfo *addr = NULL;
-	int iRet;
 
 	hints.ai_flags = AI_PASSIVE;
 	hints.ai_family = AF_INET;
@@ -102,6 +108,8 @@ bool WindowsSocketServer::BindAndListen(std::string address, uint16 port)
 		return false;
 	}
 
+	ResumeThread(m_acceptThreadHandle);
+
 	freeaddrinfo(addr);
 	return true;
 }
@@ -119,7 +127,7 @@ DWORD WindowsSocketServer::WorkerThreadProc(WindowsSocketServer* pthis)
 DWORD WindowsSocketServer::WorkerThread()
 {
 	LPWSAOVERLAPPED overlapped = NULL;
-	ClientContext* client = NULL;
+	WindowsSocketClient* client = NULL;
 	BOOL bRet;
 	int iRet;
 	DWORD flags = 0;
@@ -129,52 +137,65 @@ DWORD WindowsSocketServer::WorkerThread()
 	{
 		bRet =  GetQueuedCompletionStatus(m_completionPort, &numberOfBytes,
 											 (PDWORD_PTR)&client,
-											 (LPOVERLAPPED *)&overlapped, 
+											 (LPOVERLAPPED*)&overlapped, 
 											 INFINITE);
+		
+		
+
 		if(bRet == FALSE || (bRet == TRUE && numberOfBytes == 0))
 		{
-			//client desconected
+			ClearClient(client);
+			
+			continue;
 		}
 
 		if(client == NULL)
 		{
-			return 1;
-		}
+			continue;
+		}		
 
-		/*if(client->Operation == 1)
+		ClientContext* clientContext = GetClientContextByOverlapped(overlapped);
+
+		if(clientContext->State == CCT_RECEIVE)
 		{
-			client->Operation = 2;
-			*client->ReceiveNumBytes() = numberOfBytes;
-			client->GetWsaReceiveBuffer()->len = numberOfBytes;
-			WSASend(client->GetSocket(), client->GetWsaReceiveBuffer(), 1,
-			client->ReceiveNumBytes(), 0, client->GetOverlapperd(), NULL);
-		} 
+			clientContext->Client->AddBytesToReveivedQueue(clientContext->Buffer, numberOfBytes);
+			
+			iRet = WSARecv(clientContext->Client->GetSocket(), &clientContext->WSBuffer,
+				1, &clientContext->NumBytes, &flags, &clientContext->Overlapped, NULL);
+			if( iRet == SOCKET_ERROR && (ERROR_IO_PENDING != WSAGetLastError()) )
+			{
+				ClearClient(client);
+			}
+		}
 		else
 		{
-			if(client->GetWsaReceiveBuffer()->len < numberOfBytes)
+			if(clientContext->NumBytes > numberOfBytes)
 			{
-				client->GetWsaReceiveBuffer()->buf = (char*)client->GetReceiveBuffer()->Data() + numberOfBytes;
-				client->GetWsaReceiveBuffer()->len -= numberOfBytes;
+				clientContext->WSBuffer.buf += numberOfBytes;
+				clientContext->WSBuffer.len -= numberOfBytes;
+				clientContext->NumBytes -= numberOfBytes;
 
-				WSASend(client->GetSocket(), client->GetWsaReceiveBuffer(), 1,
-					client->ReceiveNumBytes(), 0, client->GetOverlapperd(), NULL);
+				iRet = WSASend(clientContext->Client->GetSocket(), &clientContext->WSBuffer,
+					1, &clientContext->NumBytes, flags, &clientContext->Overlapped, NULL);
 			}
 			else
 			{
-				client->Operation = 1;
-				client->GetReceiveBuffer()->Clear();
-				*client->ReceiveNumBytes() = 0;
-				client->GetWsaReceiveBuffer()->buf = (char*)client->GetReceiveBuffer()->Data();
-				client->GetWsaReceiveBuffer()->len = client->GetReceiveBuffer()->MaxLength();
-
-				iRet = WSARecv(client->GetSocket(), client->GetWsaReceiveBuffer(),
-					1, client->ReceiveNumBytes(), &flags, client->GetOverlapperd(), NULL);
-				if( iRet == SOCKET_ERROR && (ERROR_IO_PENDING != WSAGetLastError()) )
+				size_t size = clientContext->Client->GetBytesFromSendQueue(clientContext->Buffer, TCP_BUFFER_SIZE);
+				if(size > 0)
 				{
-					printf("Error %d", WSAGetLastError());
+					clientContext->WSBuffer.buf = (char*)clientContext->Buffer;
+					clientContext->WSBuffer.len = size;
+					clientContext->NumBytes = size;
+
+					iRet = WSASend(clientContext->Client->GetSocket(), &clientContext->WSBuffer,
+						1, &clientContext->NumBytes, flags, &clientContext->Overlapped, NULL);					
 				}
-			}			
-		}*/
+				else				
+				{
+					clientContext->State = CCT_SEND_NOT_WORK;
+				}
+			}
+		}
 	}
 	return 0;
 }
@@ -188,32 +209,136 @@ DWORD WindowsSocketServer::AcceptThread()
 {
 	SOCKET newSocket;
 	int iRet;
-	DWORD dwRet;
 	DWORD flags = 0;
 
 	while(true)
 	{
 		newSocket = WSAAccept(m_socketListen, NULL, NULL, NULL, 0);
+		
 		if(newSocket == SOCKET_ERROR)
 		{
 			continue;
 		}
 		
 		ClientContext* readClientContext = new ClientContext();
-		readClientContext->Client = new WindowsSocketClient(newSocket);
+		ClientContext* writeClientContext = new ClientContext();
+		WindowsSocketClient* client = new WindowsSocketClient(newSocket, this);
 
-		if(CreateIoCompletionPort((HANDLE)newSocket, m_completionPort, (ULONG_PTR)readClientContext, 0) == NULL)
+		if(CreateIoCompletionPort((HANDLE)newSocket, m_completionPort,
+			(ULONG_PTR)client, 0) == NULL)
 		{
-			delete readClientContext;
+			delete readClientContext, writeClientContext, client;
 			continue;
 		}
 
-		iRet = WSARecv(newSocket, client->GetWsaReceiveBuffer(), 1, client->ReceiveNumBytes(), &flags, client->GetOverlapperd(), NULL);
+		readClientContext->State = CCT_RECEIVE;
+		readClientContext->Client = client;
+		readClientContext->WSBuffer.buf = (char*)readClientContext->Buffer;
+		readClientContext->WSBuffer.len = TCP_BUFFER_SIZE;
+
+		writeClientContext->State = CCT_SEND_NOT_WORK;
+		writeClientContext->Client = client;
+
+		m_allContexts.push_back(readClientContext);
+		m_allContexts.push_back(writeClientContext);
+
+		iRet = WSARecv(newSocket, &readClientContext->WSBuffer, 1, &readClientContext->NumBytes,
+			&flags, &readClientContext->Overlapped, NULL);
 		if( iRet == SOCKET_ERROR && (ERROR_IO_PENDING != WSAGetLastError()) )
 		{
-			printf("Error %d", WSAGetLastError());
+			closesocket(newSocket);
+			delete readClientContext, writeClientContext, client;
+			continue;
 		}
+		m_callback(this, SEVT_CLIENT_CONNECTED, client);
 	}
+}
+
+void WindowsSocketServer::NotifyAvaliableBytesToSend(WindowsSocketClient* client)
+{
+	ClientContext* clientContext = GetClientSendContext(client);
+	size_t size = clientContext->Client->GetBytesFromSendQueue(clientContext->Buffer, TCP_BUFFER_SIZE);
+	if(size > 0)
+	{
+		clientContext->WSBuffer.buf = (char*)clientContext->Buffer;
+		clientContext->WSBuffer.len = size;
+		clientContext->NumBytes = size;
+		int iRet;
+		WSASend(clientContext->Client->GetSocket(), &clientContext->WSBuffer,
+			1, &clientContext->NumBytes, 0, &clientContext->Overlapped, NULL);
+
+		clientContext->State = CCT_SEND;
+	}
+}
+
+ClientContext* WindowsSocketServer::GetClientSendContext(WindowsSocketClient* client)
+{
+	list<ClientContext*>::iterator it =  m_allContexts.begin();
+	
+	while(it != m_allContexts.end())
+	{
+		if((*it)->Client == client)
+		{
+			return *it;
+		}
+		it++;
+	}
+	return NULL;
+}
+
+ClientContext* WindowsSocketServer::GetClientContextByOverlapped(WSAOVERLAPPED* overlapped)
+{
+	list<ClientContext*>::iterator it =  m_allContexts.begin();
+	
+	while(it != m_allContexts.end())
+	{
+		if(&(*it)->Overlapped == overlapped)
+		{
+			return *it;
+		}
+		it++;
+	}
+	return NULL;
+}
+
+void WindowsSocketServer::ClearClient(WindowsSocketClient* client)
+{
+	assert(client != NULL);
+
+	closesocket(client->GetSocket());
+
+	if(m_callback != NULL)
+	{
+		m_callback(this, SEVT_CLIENT_DESCONNECTED, client);			
+	}
+	
+	list<ClientContext*>::iterator it =  m_allContexts.begin();
+	ClientContext* context1 = NULL;
+	ClientContext* context2 = NULL;
+
+	while(it != m_allContexts.end())
+	{
+		if((*it)->Client == client)
+		{
+			if(context1 == NULL)
+			{
+				context1 = *it;
+			}
+			else
+			{
+				context2 = *it;
+				break;
+			}
+		}
+		it++;
+	}
+	
+	assert(context1 != NULL);
+	assert(context2 != NULL);
+
+	m_allContexts.remove(context1);
+	m_allContexts.remove(context2);
+	delete client, context1, context2;
 }
 
 } //namespace windows
